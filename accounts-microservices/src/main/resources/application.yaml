@@ -20,6 +20,13 @@ spring:
     listener:
       simple:
         observation-enabled: true
+        concurrency: 1
+        default-requeue-rejected: false
+        retry:
+          enabled: true
+          max-attempts: 3
+          initial-interval: 1s
+          multiplier: 2
 
 server:
   port: 8081
@@ -39,4 +46,4 @@ management:
   otlp:
     metrics:
       export:
-        enabled: false # sin colector OTLP: las métricas se exponen en /actuator/prometheus
+        enabled: false

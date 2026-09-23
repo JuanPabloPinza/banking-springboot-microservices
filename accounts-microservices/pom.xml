@@ -6,7 +6,7 @@
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>4.1.1</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<relativePath/>
 	</parent>
 	<groupId>git.juanpablopinza</groupId>
 	<artifactId>accounts-microservices</artifactId>
@@ -119,6 +119,11 @@
 			<artifactId>testcontainers-rabbitmq</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.awaitility</groupId>
+			<artifactId>awaitility</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -138,7 +143,6 @@
 							<goal>compile</goal>
 						</goals>
 						<configuration>
-							<!-- Orden: Lombok genera getters/constructores antes de que MapStruct los use -->
 							<annotationProcessorPaths>
 								<path>
 									<groupId>org.projectlombok</groupId>
@@ -157,7 +161,6 @@
 							</annotationProcessorPaths>
 							<compilerArgs>
 								<arg>-Amapstruct.defaultComponentModel=spring</arg>
-								<!-- Un campo sin mapear rompe la compilación en vez de quedar null en silencio -->
 								<arg>-Amapstruct.unmappedTargetPolicy=ERROR</arg>
 							</compilerArgs>
 						</configuration>
@@ -179,7 +182,6 @@
 					</execution>
 				</executions>
 			</plugin>
-			<!-- Pruebas de integración (*IT) en la fase verify; las unitarias (*Test) siguen en Surefire -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-failsafe-plugin</artifactId>
