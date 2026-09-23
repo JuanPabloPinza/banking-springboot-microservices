@@ -1,0 +1,41 @@
+spring:
+  application:
+    name: clients-microservices
+  datasource:
+    url: jdbc:postgresql://localhost:5434/banca
+    username: ms_clientes
+    password: ms_clientes_pwd
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        default_schema: clientes
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: banca
+    password: banca
+    template:
+      observation-enabled: true
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  tracing:
+    sampling:
+      probability: 1.0
+  otlp:
+    metrics:
+      export:
+        enabled: false # sin colector OTLP: las métricas se exponen en /actuator/prometheus
