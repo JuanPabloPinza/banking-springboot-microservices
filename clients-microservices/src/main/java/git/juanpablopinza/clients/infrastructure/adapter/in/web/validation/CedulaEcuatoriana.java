@@ -9,7 +9,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/** Valida en la entrada con la misma regla que el Value Object Identificacion del dominio. */
 @Documented
 @Constraint(validatedBy = CedulaEcuatorianaValidator.class)
 @Target({ElementType.FIELD, ElementType.PARAMETER})

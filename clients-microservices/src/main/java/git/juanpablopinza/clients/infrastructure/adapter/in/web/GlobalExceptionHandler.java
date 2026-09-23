@@ -23,10 +23,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Traduce toda excepción a RFC 9457 (ProblemDetail) con un "codigo" estable para los clientes de la API.
- * Los errores estándar de Spring MVC los resuelve la clase padre.
- */
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
@@ -36,7 +32,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
 	@ExceptionHandler(DominioException.class)
 	ProblemDetail manejarDominio(DominioException ex) {
-		// switch exhaustivo: DominioException es sellada, una categoría nueva obliga a mapearla aquí
 		return switch (ex) {
 			case NoEncontradoException e -> problema(HttpStatus.NOT_FOUND, "Recurso no encontrado", e);
 			case ConflictoException e -> problema(HttpStatus.CONFLICT, "Conflicto", e);
@@ -44,7 +39,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 		};
 	}
 
-	/** Respaldo de la base de datos: por ejemplo, dos altas simultáneas con la misma identificación. */
 	@ExceptionHandler(DataIntegrityViolationException.class)
 	ProblemDetail manejarIntegridad(DataIntegrityViolationException ex) {
 		log.warn("Violación de integridad de datos: {}", ex.getMostSpecificCause().getMessage());

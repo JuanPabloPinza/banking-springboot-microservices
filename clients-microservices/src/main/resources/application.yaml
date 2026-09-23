@@ -38,4 +38,4 @@ management:
   otlp:
     metrics:
       export:
-        enabled: false # sin colector OTLP: las métricas se exponen en /actuator/prometheus
+        enabled: false

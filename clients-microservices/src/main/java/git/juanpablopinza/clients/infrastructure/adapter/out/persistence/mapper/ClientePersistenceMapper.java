@@ -15,7 +15,6 @@ public interface ClientePersistenceMapper {
 	@Mapping(target = "id", ignore = true)
 	ClienteEntity toEntity(Cliente cliente);
 
-	/** Actualiza la entidad administrada; clienteId e identificación nunca cambian. */
 	@Mapping(target = "id", ignore = true)
 	@Mapping(target = "clienteId", ignore = true)
 	@Mapping(target = "identificacion", ignore = true)

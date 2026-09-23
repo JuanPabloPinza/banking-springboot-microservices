@@ -20,7 +20,6 @@ public class RabbitClienteEventoPublisher implements ClienteEventoPublisherPort 
 
 	private final RabbitTemplate rabbitTemplate;
 
-	/** Publica solo después del commit: si la transacción hace rollback, el evento no sale. */
 	@Override
 	public void publicar(ClienteEvento evento) {
 		if (TransactionSynchronizationManager.isSynchronizationActive()) {
@@ -42,7 +41,6 @@ public class RabbitClienteEventoPublisher implements ClienteEventoPublisherPort 
 		try {
 			rabbitTemplate.convertAndSend(RabbitConfig.EXCHANGE_CLIENTES, routingKey, mensaje);
 		} catch (AmqpException e) {
-			// ponytail: si el broker cae justo después del commit, el evento se pierde; el patrón Outbox lo resolvería
 			log.error("No se pudo publicar el evento {} del cliente {}", routingKey, evento.clienteId(), e);
 		}
 	}

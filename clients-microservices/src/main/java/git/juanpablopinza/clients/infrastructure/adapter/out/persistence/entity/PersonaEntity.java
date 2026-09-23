@@ -14,7 +14,6 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
-/** JOINED: persona y cliente en tablas separadas, unidas por la misma PK. */
 @Entity
 @Table(name = "persona")
 @Inheritance(strategy = InheritanceType.JOINED)
