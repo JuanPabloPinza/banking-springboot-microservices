@@ -6,7 +6,6 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-/** PATCH: todos los campos son opcionales; los que llegan se validan igual que en el alta. */
 public record ClientePatchRequest(
 		@Size(max = 100, message = "El nombre admite máximo 100 caracteres")
 		@Pattern(regexp = ".*\\S.*", message = "El nombre no puede estar vacío")

@@ -22,14 +22,7 @@ class IdentificacionTest {
     //Algunos valores en los que la cédula es incorrecta
 	@ParameterizedTest
 	@NullAndEmptySource
-	@ValueSource(strings = {
-			"1710034066", // dígito verificador incorrecto
-			"2510034065", // provincia inexistente
-			"1760034065", // tercer dígito >= 6 (no es persona natural)
-			"171003406",  // 9 dígitos
-			"17100340655", // 11 dígitos
-			"17100340AB"  // no numérica
-	})
+	@ValueSource(strings = {"1710034066", "2510034065", "1760034065", "171003406", "17100340655", "17100340AB"})
 	@DisplayName("Rechaza cédulas inválidas")
 	void cedulasInvalidas(String cedula) {
 		assertThat(Identificacion.esValida(cedula)).isFalse();

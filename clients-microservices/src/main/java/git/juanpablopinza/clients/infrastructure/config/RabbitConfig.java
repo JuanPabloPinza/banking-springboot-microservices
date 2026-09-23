@@ -11,7 +11,6 @@ public class RabbitConfig {
 
 	public static final String EXCHANGE_CLIENTES = "clientes.eventos";
 
-	/** Topic: cada consumidor se suscribe a las routing keys que le interesan (cliente.creado, cliente.*...). */
 	@Bean
 	TopicExchange clientesExchange() {
 		return new TopicExchange(EXCHANGE_CLIENTES, true, false);

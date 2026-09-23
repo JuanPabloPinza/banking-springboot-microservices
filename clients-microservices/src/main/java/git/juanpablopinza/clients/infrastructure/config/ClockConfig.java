@@ -6,7 +6,6 @@ import org.springframework.context.annotation.Configuration;
 import java.time.Clock;
 import java.time.ZoneId;
 
-/** Un Clock inyectable hace que las fechas sean deterministas en las pruebas. */
 @Configuration
 public class ClockConfig {
 
