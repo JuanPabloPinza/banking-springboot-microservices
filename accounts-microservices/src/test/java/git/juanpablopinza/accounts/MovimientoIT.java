@@ -16,8 +16,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -29,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -46,6 +49,8 @@ class MovimientoIT {
 	private ClienteRefJpaRepository clienteRefRepository;
 	@Autowired
 	private CuentaJpaRepository cuentaRepository;
+	@Autowired
+	private Clock clock;
 
 	private UUID publicarClienteCreado(String nombre) {
 		UUID clienteId = UUID.randomUUID();
@@ -73,7 +78,7 @@ class MovimientoIT {
 	}
 
 	@Test
-	@DisplayName("Caso de uso del enunciado: el evento crea la réplica, los movimientos mueven el saldo y sin saldo responde 422")
+	@DisplayName("Caso de uso del enunciado: el evento crea la réplica, los movimientos mueven el saldo, sin saldo responde 422 y el reporte lo refleja")
 	void flujoDeMovimientos() throws Exception {
 		UUID marianela = publicarClienteCreado("Marianela Montalvo");
 		crearCuenta("225487", "100", marianela);
@@ -94,6 +99,19 @@ class MovimientoIT {
 		assertThat(cuenta("225487").getSaldoInicial()).isEqualByComparingTo("100");
 		assertThat(cuenta("225487").getSaldoDisponible()).isEqualByComparingTo("700");
 		assertThat(cuenta("496825").getSaldoDisponible()).isEqualByComparingTo("0");
+
+		LocalDate hoy = LocalDate.now(clock);
+		mockMvc.perform(get("/api/reportes").param("cliente", marianela.toString())
+						.param("fecha", hoy.minusDays(1) + "," + hoy))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.cliente.nombre").value("Marianela Montalvo"))
+				.andExpect(jsonPath("$.cuentas.length()").value(2))
+				.andExpect(jsonPath("$.cuentas[0].numeroCuenta").value("225487"))
+				.andExpect(jsonPath("$.cuentas[0].totalCreditos").value(600.0))
+				.andExpect(jsonPath("$.cuentas[0].movimientos.length()").value(1))
+				.andExpect(jsonPath("$.cuentas[1].numeroCuenta").value("496825"))
+				.andExpect(jsonPath("$.cuentas[1].totalDebitos").value(-540.0))
+				.andExpect(jsonPath("$.cuentas[1].saldoDisponible").value(0.0));
 	}
 
 	@Test
