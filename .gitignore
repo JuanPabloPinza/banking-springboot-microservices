@@ -1,0 +1,22 @@
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Sistema operativo y Office
+.DS_Store
+Thumbs.db
+~$*
+
+# Ayuda autogenerada por Spring Initializr
+HELP.md
+
+# Build
+target/
+
+# Entorno
+.env
+*.log
+
+# Material privado del reto (plan, enunciado, matriz): no se publica
+Recursos/
