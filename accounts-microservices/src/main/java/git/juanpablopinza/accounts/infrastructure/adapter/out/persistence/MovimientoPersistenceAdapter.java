@@ -14,7 +14,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -54,6 +57,11 @@ public class MovimientoPersistenceAdapter implements MovimientoRepositoryPort {
 				: repository.findByCuentaNumeroCuenta(numeroCuenta, pageable);
 		return new Pagina<>(page.map(mapper::toDomain).getContent(), page.getNumber(), page.getSize(),
 				page.getTotalElements(), page.getTotalPages());
+	}
+
+	@Override
+	public List<Movimiento> listarPorClienteEntre(UUID clienteId, LocalDateTime desde, LocalDateTime hastaExclusivo) {
+		return repository.findPorClienteEntre(clienteId, desde, hastaExclusivo).stream().map(mapper::toDomain).toList();
 	}
 
 	@Override
