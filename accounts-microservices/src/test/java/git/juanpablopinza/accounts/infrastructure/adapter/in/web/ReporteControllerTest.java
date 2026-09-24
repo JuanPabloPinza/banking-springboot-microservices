@@ -8,10 +8,12 @@ import git.juanpablopinza.accounts.application.port.in.ReporteUseCase;
 import git.juanpablopinza.accounts.domain.exception.DatoInvalidoException;
 import git.juanpablopinza.accounts.domain.model.TipoCuenta;
 import git.juanpablopinza.accounts.domain.model.TipoMovimiento;
+import git.juanpablopinza.accounts.infrastructure.config.SecurityConfig;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -24,11 +26,13 @@ import java.util.UUID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(ReporteController.class)
+@Import(SecurityConfig.class)
 class ReporteControllerTest {
 
 	private static final UUID CLIENTE = UUID.fromString("7f0f7a3e-4b6e-4c55-9d8a-2a1f3c0b9e11");
@@ -51,7 +55,7 @@ class ReporteControllerTest {
 						List.of(new MovimientoReporte(LocalDateTime.of(2026, 9, 23, 10, 15, 30),
 								TipoMovimiento.DEPOSITO, new BigDecimal("600.00"), new BigDecimal("700.00")))))));
 
-		mockMvc.perform(get("/api/reportes").param("cliente", CLIENTE.toString()).param("fecha", "2026-09-01,2026-09-30"))
+		mockMvc.perform(get("/api/reportes").with(jwt()).param("cliente", CLIENTE.toString()).param("fecha", "2026-09-01,2026-09-30"))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.cliente.nombre").value("Marianela Montalvo"))
 				.andExpect(jsonPath("$.fechaInicio").value("2026-09-01"))
@@ -63,7 +67,7 @@ class ReporteControllerTest {
 	@Test
 	@DisplayName("Con una sola fecha responde 400 y no llega al caso de uso")
 	void unaSolaFecha() throws Exception {
-		mockMvc.perform(get("/api/reportes").param("cliente", CLIENTE.toString()).param("fecha", "2026-09-01"))
+		mockMvc.perform(get("/api/reportes").with(jwt()).param("cliente", CLIENTE.toString()).param("fecha", "2026-09-01"))
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.codigo").value("VALIDACION"))
 				.andExpect(jsonPath("$.errores[0].campo").value("fecha"));
@@ -76,7 +80,7 @@ class ReporteControllerTest {
 		when(reporteUseCase.generar(any(), any(), any()))
 				.thenThrow(new DatoInvalidoException("La fecha inicial no puede ser posterior a la fecha final"));
 
-		mockMvc.perform(get("/api/reportes").param("cliente", CLIENTE.toString()).param("fecha", "2026-09-30,2026-09-01"))
+		mockMvc.perform(get("/api/reportes").with(jwt()).param("cliente", CLIENTE.toString()).param("fecha", "2026-09-30,2026-09-01"))
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.codigo").value("DATO_INVALIDO"));
 	}
@@ -84,7 +88,7 @@ class ReporteControllerTest {
 	@Test
 	@DisplayName("Una fecha con formato inválido responde 400")
 	void fechaMalFormada() throws Exception {
-		mockMvc.perform(get("/api/reportes").param("cliente", CLIENTE.toString()).param("fecha", "01/09/2026,2026-09-30"))
+		mockMvc.perform(get("/api/reportes").with(jwt()).param("cliente", CLIENTE.toString()).param("fecha", "01/09/2026,2026-09-30"))
 				.andExpect(status().isBadRequest());
 		verifyNoInteractions(reporteUseCase);
 	}

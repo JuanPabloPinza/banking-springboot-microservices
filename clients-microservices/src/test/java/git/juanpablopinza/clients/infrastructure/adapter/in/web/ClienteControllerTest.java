@@ -6,6 +6,7 @@ import git.juanpablopinza.clients.domain.model.Cliente;
 import git.juanpablopinza.clients.domain.model.Genero;
 import git.juanpablopinza.clients.domain.model.Identificacion;
 import git.juanpablopinza.clients.infrastructure.adapter.in.web.mapper.ClienteWebMapperImpl;
+import git.juanpablopinza.clients.infrastructure.config.SecurityConfig;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -31,7 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(ClienteController.class)
-@Import(ClienteWebMapperImpl.class)
+@Import({ClienteWebMapperImpl.class, SecurityConfig.class})
 class ClienteControllerTest {
 
 	private static final String CLIENTE_JSON = """
@@ -64,7 +66,7 @@ class ClienteControllerTest {
 		Cliente cliente = joseLema();
 		when(clienteUseCase.crear(any())).thenReturn(cliente);
 
-		mockMvc.perform(post("/api/clientes").contentType(MediaType.APPLICATION_JSON).content(CLIENTE_JSON))
+		mockMvc.perform(post("/api/clientes").with(jwt()).contentType(MediaType.APPLICATION_JSON).content(CLIENTE_JSON))
 				.andExpect(status().isCreated())
 				.andExpect(header().string("Location", endsWith("/api/clientes/" + cliente.getClienteId())))
 				.andExpect(jsonPath("$.clienteId").value(cliente.getClienteId().toString()))
@@ -78,7 +80,7 @@ class ClienteControllerTest {
 	void crearClienteInvalido() throws Exception {
 		String invalido = CLIENTE_JSON.replace("1710034065", "1710034066").replace("\"Jose Lema\"", "\"\"");
 
-		mockMvc.perform(post("/api/clientes").contentType(MediaType.APPLICATION_JSON).content(invalido))
+		mockMvc.perform(post("/api/clientes").with(jwt()).contentType(MediaType.APPLICATION_JSON).content(invalido))
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.codigo").value("VALIDACION"))
 				.andExpect(jsonPath("$.errores[?(@.campo == 'identificacion')]").exists())
@@ -92,7 +94,7 @@ class ClienteControllerTest {
 		UUID clienteId = UUID.randomUUID();
 		when(clienteUseCase.obtener(clienteId)).thenThrow(new ClienteNoEncontradoException(clienteId));
 
-		mockMvc.perform(get("/api/clientes/{clienteId}", clienteId))
+		mockMvc.perform(get("/api/clientes/{clienteId}", clienteId).with(jwt()))
 				.andExpect(status().isNotFound())
 				.andExpect(jsonPath("$.status").value(404))
 				.andExpect(jsonPath("$.codigo").value("CLIENTE_NO_ENCONTRADO"));
@@ -101,7 +103,7 @@ class ClienteControllerTest {
 	@Test
 	@DisplayName("GET /api/clientes/{id} con un id que no es UUID devuelve 400")
 	void obtenerConIdInvalido() throws Exception {
-		mockMvc.perform(get("/api/clientes/{clienteId}", "no-es-uuid"))
+		mockMvc.perform(get("/api/clientes/{clienteId}", "no-es-uuid").with(jwt()))
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.codigo").value("PARAMETRO_INVALIDO"));
 	}
@@ -111,8 +113,16 @@ class ClienteControllerTest {
 	void eliminar() throws Exception {
 		UUID clienteId = UUID.randomUUID();
 
-		mockMvc.perform(delete("/api/clientes/{clienteId}", clienteId))
+		mockMvc.perform(delete("/api/clientes/{clienteId}", clienteId).with(jwt()))
 				.andExpect(status().isNoContent());
 		verify(clienteUseCase).eliminar(eq(clienteId));
+	}
+
+	@Test
+	@DisplayName("Sin token JWT responde 401 y no llega al caso de uso")
+	void sinToken() throws Exception {
+		mockMvc.perform(post("/api/clientes").contentType(MediaType.APPLICATION_JSON).content(CLIENTE_JSON))
+				.andExpect(status().isUnauthorized());
+		verifyNoInteractions(clienteUseCase);
 	}
 }
