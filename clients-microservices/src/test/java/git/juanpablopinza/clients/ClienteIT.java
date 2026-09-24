@@ -23,6 +23,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -48,7 +49,7 @@ class ClienteIT {
 		amqpAdmin.declareBinding(BindingBuilder.bind(cola)
 				.to(new TopicExchange(RabbitConfig.EXCHANGE_CLIENTES)).with("cliente.#"));
 
-		String location = mockMvc.perform(post("/api/clientes").contentType(MediaType.APPLICATION_JSON).content("""
+		String location = mockMvc.perform(post("/api/clientes").with(jwt()).contentType(MediaType.APPLICATION_JSON).content("""
 						{
 						  "nombre": "Marianela Montalvo",
 						  "genero": "FEMENINO",

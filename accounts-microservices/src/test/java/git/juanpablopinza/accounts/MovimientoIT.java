@@ -31,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -61,14 +62,14 @@ class MovimientoIT {
 	}
 
 	private void crearCuenta(String numeroCuenta, String saldoInicial, UUID clienteId) throws Exception {
-		mockMvc.perform(post("/api/cuentas").contentType(MediaType.APPLICATION_JSON).content("""
+		mockMvc.perform(post("/api/cuentas").with(jwt()).contentType(MediaType.APPLICATION_JSON).content("""
 						{ "numeroCuenta": "%s", "tipoCuenta": "AHORROS", "saldoInicial": %s, "clienteId": "%s" }
 						""".formatted(numeroCuenta, saldoInicial, clienteId)))
 				.andExpect(status().isCreated());
 	}
 
 	private ResultActions registrarMovimiento(String numeroCuenta, String valor) throws Exception {
-		return mockMvc.perform(post("/api/movimientos").contentType(MediaType.APPLICATION_JSON).content("""
+		return mockMvc.perform(post("/api/movimientos").with(jwt()).contentType(MediaType.APPLICATION_JSON).content("""
 				{ "numeroCuenta": "%s", "valor": %s }
 				""".formatted(numeroCuenta, valor)));
 	}
@@ -101,7 +102,7 @@ class MovimientoIT {
 		assertThat(cuenta("496825").getSaldoDisponible()).isEqualByComparingTo("0");
 
 		LocalDate hoy = LocalDate.now(clock);
-		mockMvc.perform(get("/api/reportes").param("cliente", marianela.toString())
+		mockMvc.perform(get("/api/reportes").with(jwt()).param("cliente", marianela.toString())
 						.param("fecha", hoy.minusDays(1) + "," + hoy))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.cliente.nombre").value("Marianela Montalvo"))
