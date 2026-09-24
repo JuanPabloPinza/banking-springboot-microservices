@@ -28,3 +28,12 @@ jobs:
 
       - name: Compilar y ejecutar pruebas
         run: ./mvnw -B verify
+
+  docker:
+    name: Imágenes Docker
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Construir imágenes
+        run: docker compose build
