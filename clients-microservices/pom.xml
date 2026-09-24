@@ -275,6 +275,7 @@
 						<param>git.juanpablopinza.clients.*Test</param>
 					</targetTests>
 					<mutationThreshold>70</mutationThreshold>
+					<parseSurefireArgLine>false</parseSurefireArgLine>
 					<timestampedReports>false</timestampedReports>
 					<outputFormats>
 						<param>HTML</param>
