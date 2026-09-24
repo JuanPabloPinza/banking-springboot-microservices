@@ -18,7 +18,7 @@ class CuentaTest {
 	private static final LocalDateTime AHORA = LocalDateTime.of(2026, 9, 23, 10, 0);
 
 	private Cuenta cuenta(String numero, String saldoInicial) {
-		return Cuenta.abrir(numero, TipoCuenta.AHORROS, new BigDecimal(saldoInicial), true, UUID.randomUUID());
+		return Cuenta.abrir(numero, TipoCuenta.AHORROS, new BigDecimal(saldoInicial), true, UUID.randomUUID(), AHORA);
 	}
 
 	@Test
@@ -35,7 +35,7 @@ class CuentaTest {
 	void deposito() {
 		Cuenta cuenta = cuenta("225487", "100");
 
-		Movimiento movimiento = cuenta.registrarMovimiento(new BigDecimal("600"), AHORA, null);
+		Movimiento movimiento = cuenta.registrarMovimiento(new BigDecimal("600"), AHORA);
 
 		assertThat(movimiento.getTipoMovimiento()).isEqualTo(TipoMovimiento.DEPOSITO);
 		assertThat(movimiento.getSaldo()).isEqualByComparingTo("700");
@@ -48,7 +48,7 @@ class CuentaTest {
 	void retiro() {
 		Cuenta cuenta = cuenta("478758", "2000");
 
-		Movimiento movimiento = cuenta.registrarMovimiento(new BigDecimal("-575"), AHORA, null);
+		Movimiento movimiento = cuenta.registrarMovimiento(new BigDecimal("-575"), AHORA);
 
 		assertThat(movimiento.getTipoMovimiento()).isEqualTo(TipoMovimiento.RETIRO);
 		assertThat(cuenta.getSaldoDisponible()).isEqualByComparingTo("1425");
@@ -59,7 +59,7 @@ class CuentaTest {
 	void retiroDeTodoElSaldo() {
 		Cuenta cuenta = cuenta("496825", "540");
 
-		cuenta.registrarMovimiento(new BigDecimal("-540"), AHORA, null);
+		cuenta.registrarMovimiento(new BigDecimal("-540"), AHORA);
 
 		assertThat(cuenta.getSaldoDisponible()).isEqualByComparingTo("0");
 	}
@@ -69,7 +69,7 @@ class CuentaTest {
 	void retiroSinSaldo() {
 		Cuenta cuenta = cuenta("495878", "0");
 
-		assertThatThrownBy(() -> cuenta.registrarMovimiento(new BigDecimal("-0.01"), AHORA, null))
+		assertThatThrownBy(() -> cuenta.registrarMovimiento(new BigDecimal("-0.01"), AHORA))
 				.isInstanceOf(SaldoNoDisponibleException.class)
 				.hasMessage("Saldo no disponible");
 		assertThat(cuenta.getSaldoDisponible()).isEqualByComparingTo("0");
@@ -80,7 +80,7 @@ class CuentaTest {
 	void valorCero() {
 		Cuenta cuenta = cuenta("478758", "100");
 
-		assertThatThrownBy(() -> cuenta.registrarMovimiento(BigDecimal.ZERO, AHORA, null))
+		assertThatThrownBy(() -> cuenta.registrarMovimiento(BigDecimal.ZERO, AHORA))
 				.isInstanceOf(DatoInvalidoException.class);
 	}
 
@@ -90,7 +90,7 @@ class CuentaTest {
 		Cuenta cuenta = cuenta("478758", "100");
 		cuenta.desactivar();
 
-		assertThatThrownBy(() -> cuenta.registrarMovimiento(BigDecimal.TEN, AHORA, null))
+		assertThatThrownBy(() -> cuenta.registrarMovimiento(BigDecimal.TEN, AHORA))
 				.isInstanceOf(CuentaInactivaException.class);
 	}
 
@@ -98,7 +98,7 @@ class CuentaTest {
 	@DisplayName("Corregir el último movimiento recalcula su saldo y el de la cuenta desde el saldo anterior")
 	void corregirUltimoMovimiento() {
 		Cuenta cuenta = cuenta("585545", "1000");
-		Movimiento ultimo = cuenta.registrarMovimiento(new BigDecimal("100"), AHORA, null);
+		Movimiento ultimo = cuenta.registrarMovimiento(new BigDecimal("100"), AHORA);
 
 		cuenta.corregirUltimoMovimiento(ultimo, new BigDecimal("-300"));
 
@@ -111,7 +111,7 @@ class CuentaTest {
 	@DisplayName("Una corrección que dejaría saldo negativo también responde 'Saldo no disponible'")
 	void corregirSinSaldo() {
 		Cuenta cuenta = cuenta("585545", "1000");
-		Movimiento ultimo = cuenta.registrarMovimiento(new BigDecimal("100"), AHORA, null);
+		Movimiento ultimo = cuenta.registrarMovimiento(new BigDecimal("100"), AHORA);
 
 		assertThatThrownBy(() -> cuenta.corregirUltimoMovimiento(ultimo, new BigDecimal("-1001")))
 				.isInstanceOf(SaldoNoDisponibleException.class);
@@ -122,7 +122,7 @@ class CuentaTest {
 	@DisplayName("Revertir el último movimiento devuelve el saldo al valor previo")
 	void revertirUltimoMovimiento() {
 		Cuenta cuenta = cuenta("585545", "1000");
-		Movimiento ultimo = cuenta.registrarMovimiento(new BigDecimal("-250"), AHORA, null);
+		Movimiento ultimo = cuenta.registrarMovimiento(new BigDecimal("-250"), AHORA);
 
 		cuenta.revertirUltimoMovimiento(ultimo);
 

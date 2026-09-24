@@ -23,6 +23,16 @@ public class ClienteRefPersistenceAdapter implements ClienteRefRepositoryPort {
 	}
 
 	@Override
+	public Optional<ClienteRef> buscarConBloqueoCompartido(UUID clienteId) {
+		return repository.findConBloqueoCompartido(clienteId).map(mapper::toDomain);
+	}
+
+	@Override
+	public Optional<ClienteRef> buscarParaActualizar(UUID clienteId) {
+		return repository.findParaActualizar(clienteId).map(mapper::toDomain);
+	}
+
+	@Override
 	public void guardar(ClienteRef clienteRef) {
 		repository.save(mapper.toEntity(clienteRef));
 	}

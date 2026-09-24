@@ -6,12 +6,15 @@ import git.juanpablopinza.accounts.application.port.in.RegistrarMovimientoComman
 import git.juanpablopinza.accounts.application.port.in.ResultadoMovimiento;
 import git.juanpablopinza.accounts.application.port.out.CuentaRepositoryPort;
 import git.juanpablopinza.accounts.application.port.out.MovimientoRepositoryPort;
+import git.juanpablopinza.accounts.application.port.out.SolicitudIdempotenteRepositoryPort;
 import git.juanpablopinza.accounts.domain.exception.CuentaNoEncontradaException;
 import git.juanpablopinza.accounts.domain.exception.IdempotencyKeyReutilizadaException;
 import git.juanpablopinza.accounts.domain.exception.MovimientoNoEncontradoException;
 import git.juanpablopinza.accounts.domain.exception.MovimientoNoModificableException;
+import git.juanpablopinza.accounts.domain.exception.OperacionAnuladaException;
 import git.juanpablopinza.accounts.domain.model.Cuenta;
 import git.juanpablopinza.accounts.domain.model.Movimiento;
+import git.juanpablopinza.accounts.domain.model.SolicitudIdempotente;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,26 +32,28 @@ public class MovimientoService implements MovimientoUseCase {
 
 	private final CuentaRepositoryPort cuentaRepository;
 	private final MovimientoRepositoryPort movimientoRepository;
+	private final SolicitudIdempotenteRepositoryPort solicitudRepository;
 	private final Clock clock;
-
 
 	@Override
 	public ResultadoMovimiento registrar(RegistrarMovimientoCommand command) {
 		Cuenta cuenta = bloquear(command.numeroCuenta());
 
-		Optional<Movimiento> previo = Optional.ofNullable(command.idempotencyKey())
-				.flatMap(movimientoRepository::buscarPorIdempotencyKey);
-		if (previo.isPresent()) {
-			if (!previo.get().esMismaSolicitud(command.numeroCuenta(), command.valor())) {
-				throw new IdempotencyKeyReutilizadaException(command.idempotencyKey());
-			}
-			return new ResultadoMovimiento(previo.get(), true);
+		Optional<SolicitudIdempotente> previa = Optional.ofNullable(command.idempotencyKey())
+				.flatMap(solicitudRepository::buscar);
+		if (previa.isPresent()) {
+			return repetir(previa.get(), command);
 		}
 
-		Movimiento movimiento = cuenta.registrarMovimiento(command.valor(),
-				LocalDateTime.now(clock).truncatedTo(ChronoUnit.SECONDS), command.idempotencyKey());
+		LocalDateTime ahora = LocalDateTime.now(clock).truncatedTo(ChronoUnit.SECONDS);
+		Movimiento nuevo = cuenta.registrarMovimiento(command.valor(), ahora);
 		cuentaRepository.guardar(cuenta);
-		return new ResultadoMovimiento(movimientoRepository.guardar(movimiento), false);
+		Movimiento movimiento = movimientoRepository.guardar(nuevo);
+		if (command.idempotencyKey() != null) {
+			solicitudRepository.crear(new SolicitudIdempotente(command.idempotencyKey(), command.numeroCuenta(),
+					movimiento.getValor(), movimiento.getId(), ahora));
+		}
+		return new ResultadoMovimiento(movimiento, false);
 	}
 
 	@Override
@@ -65,8 +70,8 @@ public class MovimientoService implements MovimientoUseCase {
 
 	@Override
 	public Movimiento corregir(Long id, BigDecimal nuevoValor) {
+		Cuenta cuenta = bloquearCuentaDe(id);
 		Movimiento movimiento = buscar(id);
-		Cuenta cuenta = bloquear(movimiento.getNumeroCuenta());
 		validarEsUltimo(movimiento);
 		cuenta.corregirUltimoMovimiento(movimiento, nuevoValor);
 		cuentaRepository.guardar(cuenta);
@@ -75,12 +80,27 @@ public class MovimientoService implements MovimientoUseCase {
 
 	@Override
 	public void eliminar(Long id) {
+		Cuenta cuenta = bloquearCuentaDe(id);
 		Movimiento movimiento = buscar(id);
-		Cuenta cuenta = bloquear(movimiento.getNumeroCuenta());
 		validarEsUltimo(movimiento);
 		cuenta.revertirUltimoMovimiento(movimiento);
 		cuentaRepository.guardar(cuenta);
 		movimientoRepository.eliminar(id);
+	}
+
+	private ResultadoMovimiento repetir(SolicitudIdempotente previa, RegistrarMovimientoCommand command) {
+		if (!previa.esMismaSolicitud(command.numeroCuenta(), command.valor())) {
+			throw new IdempotencyKeyReutilizadaException(command.idempotencyKey());
+		}
+		if (previa.fueAnulada()) {
+			throw new OperacionAnuladaException(command.idempotencyKey());
+		}
+		return new ResultadoMovimiento(buscar(previa.movimientoId()), true);
+	}
+
+	private Cuenta bloquearCuentaDe(Long movimientoId) {
+		return bloquear(movimientoRepository.buscarNumeroCuenta(movimientoId)
+				.orElseThrow(() -> new MovimientoNoEncontradoException(movimientoId)));
 	}
 
 	private Cuenta bloquear(String numeroCuenta) {

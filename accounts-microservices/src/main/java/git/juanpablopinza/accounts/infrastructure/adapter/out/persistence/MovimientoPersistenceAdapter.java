@@ -40,13 +40,13 @@ public class MovimientoPersistenceAdapter implements MovimientoRepositoryPort {
 	}
 
 	@Override
-	public Optional<Movimiento> buscarUltimo(String numeroCuenta) {
-		return repository.findFirstByCuentaNumeroCuentaOrderByIdDesc(numeroCuenta).map(mapper::toDomain);
+	public Optional<String> buscarNumeroCuenta(Long id) {
+		return repository.findNumeroCuentaById(id);
 	}
 
 	@Override
-	public Optional<Movimiento> buscarPorIdempotencyKey(String idempotencyKey) {
-		return repository.findByIdempotencyKey(idempotencyKey).map(mapper::toDomain);
+	public Optional<Movimiento> buscarUltimo(String numeroCuenta) {
+		return repository.findFirstByCuentaNumeroCuentaOrderByIdDesc(numeroCuenta).map(mapper::toDomain);
 	}
 
 	@Override
@@ -62,6 +62,11 @@ public class MovimientoPersistenceAdapter implements MovimientoRepositoryPort {
 	@Override
 	public List<Movimiento> listarPorClienteEntre(UUID clienteId, LocalDateTime desde, LocalDateTime hastaExclusivo) {
 		return repository.findPorClienteEntre(clienteId, desde, hastaExclusivo).stream().map(mapper::toDomain).toList();
+	}
+
+	@Override
+	public List<Movimiento> listarUltimosPorClienteAntesDe(UUID clienteId, LocalDateTime fecha) {
+		return repository.findUltimosPorClienteAntesDe(clienteId, fecha).stream().map(mapper::toDomain).toList();
 	}
 
 	@Override

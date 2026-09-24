@@ -41,7 +41,7 @@ class MovimientoControllerTest {
 
 	private Movimiento deposito() {
 		return new Movimiento(10L, "225487", LocalDateTime.of(2026, 9, 23, 10, 0), TipoMovimiento.DEPOSITO,
-				new BigDecimal("600.00"), new BigDecimal("700.00"), null);
+				new BigDecimal("600.00"), new BigDecimal("700.00"));
 	}
 
 	private static String cuerpo(String numeroCuenta, String valor) {

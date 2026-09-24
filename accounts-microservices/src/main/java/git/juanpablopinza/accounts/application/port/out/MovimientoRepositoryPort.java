@@ -14,13 +14,15 @@ public interface MovimientoRepositoryPort {
 
 	Optional<Movimiento> buscarPorId(Long id);
 
-	Optional<Movimiento> buscarUltimo(String numeroCuenta);
+	Optional<String> buscarNumeroCuenta(Long id);
 
-	Optional<Movimiento> buscarPorIdempotencyKey(String idempotencyKey);
+	Optional<Movimiento> buscarUltimo(String numeroCuenta);
 
 	Pagina<Movimiento> listar(String numeroCuenta, int pagina, int tamanio);
 
 	List<Movimiento> listarPorClienteEntre(UUID clienteId, LocalDateTime desde, LocalDateTime hastaExclusivo);
+
+	List<Movimiento> listarUltimosPorClienteAntesDe(UUID clienteId, LocalDateTime fecha);
 
 	void eliminar(Long id);
 }

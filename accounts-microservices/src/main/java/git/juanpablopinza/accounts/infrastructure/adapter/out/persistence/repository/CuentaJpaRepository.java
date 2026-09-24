@@ -22,6 +22,9 @@ public interface CuentaJpaRepository extends JpaRepository<CuentaEntity, Long> {
 	@Query("select c from CuentaEntity c where c.numeroCuenta = :numeroCuenta")
 	Optional<CuentaEntity> findByNumeroCuentaParaActualizar(@Param("numeroCuenta") String numeroCuenta);
 
+	@Query("select c.clienteId from CuentaEntity c where c.numeroCuenta = :numeroCuenta")
+	Optional<UUID> findClienteIdByNumeroCuenta(@Param("numeroCuenta") String numeroCuenta);
+
 	boolean existsByNumeroCuenta(String numeroCuenta);
 
 	Page<CuentaEntity> findByClienteId(UUID clienteId, Pageable pageable);

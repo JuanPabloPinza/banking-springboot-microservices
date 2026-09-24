@@ -22,7 +22,7 @@ public class SincronizacionClienteService implements SincronizarClienteUseCase {
 
 	@Override
 	public void sincronizar(SincronizarClienteCommand command) {
-		boolean atrasado = clienteRefRepository.buscar(command.clienteId())
+		boolean atrasado = clienteRefRepository.buscarParaActualizar(command.clienteId())
 				.map(actual -> actual.esMasRecienteQue(command.ocurridoEn()))
 				.orElse(false);
 		if (atrasado) {
