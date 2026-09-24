@@ -1000,7 +1000,75 @@
           ]
         },
         {
-          "name": "585545 +300 → 1400",
+          "name": "PUT del movimiento idempotente (100 → 150)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrlCuentas}}/api/movimientos/{{movimientoIdempotenteId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"valor\": 150\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "",
+                  "pm.test('Saldo recalculado a 1150', function () { pm.expect(pm.response.json().saldo).to.eql(1150); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reintento tras la corrección → 200 con el movimiento corregido",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idempotencyKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrlCuentas}}/api/movimientos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numeroCuenta\": \"585545\",\n  \"valor\": 100\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "",
+                  "pm.test('Reconoce la solicitud original y devuelve el estado actual', function () {",
+                  "    pm.expect(pm.response.json().id).to.eql(pm.collectionVariables.get('movimientoIdempotenteId'));",
+                  "    pm.expect(pm.response.json().valor).to.eql(150);",
+                  "    pm.expect(pm.response.headers.get('Idempotent-Replayed')).to.eql('true');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "585545 +300 → 1450",
           "request": {
             "method": "POST",
             "header": [
@@ -1024,10 +1092,10 @@
                   "pm.test('HTTP 201', function () { pm.response.to.have.status(201); });",
                   "",
                   "var json = pm.response.json();",
-                  "pm.test('DEPOSITO de 300 deja saldo 1400', function () {",
+                  "pm.test('DEPOSITO de 300 deja saldo 1450', function () {",
                   "    pm.expect(json.tipoMovimiento).to.eql('DEPOSITO');",
                   "    pm.expect(json.valor).to.eql(300);",
-                  "    pm.expect(json.saldo).to.eql(1400);",
+                  "    pm.expect(json.saldo).to.eql(1450);",
                   "});",
                   "pm.collectionVariables.set('ultimoMovimientoId', json.id);"
                 ]
@@ -1088,7 +1156,7 @@
                 "exec": [
                   "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
                   "",
-                  "pm.test('Saldo recalculado a 1300', function () { pm.expect(pm.response.json().saldo).to.eql(1300); });"
+                  "pm.test('Saldo recalculado a 1350', function () { pm.expect(pm.response.json().saldo).to.eql(1350); });"
                 ]
               }
             }
@@ -1114,7 +1182,7 @@
           ]
         },
         {
-          "name": "Cuenta 585545 vuelve a 1100",
+          "name": "Cuenta 585545 vuelve a 1150",
           "request": {
             "method": "GET",
             "header": [],
@@ -1128,7 +1196,80 @@
                 "exec": [
                   "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
                   "",
-                  "pm.test('Saldo disponible 1100', function () { pm.expect(pm.response.json().saldoDisponible).to.eql(1100); });"
+                  "pm.test('Saldo disponible 1150', function () { pm.expect(pm.response.json().saldoDisponible).to.eql(1150); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE del movimiento idempotente (ahora es el último)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrlCuentas}}/api/movimientos/{{movimientoIdempotenteId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204', function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "❌ Reintento de una operación anulada → 409 sin volver a aplicarla",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idempotencyKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrlCuentas}}/api/movimientos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numeroCuenta\": \"585545\",\n  \"valor\": 100\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 409', function () { pm.response.to.have.status(409); });",
+                  "pm.test('codigo OPERACION_ANULADA', function () { pm.expect(pm.response.json().codigo).to.eql('OPERACION_ANULADA'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cuenta 585545 vuelve a 1000",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrlCuentas}}/api/cuentas/585545"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "",
+                  "pm.test('Saldo disponible 1000', function () { pm.expect(pm.response.json().saldoDisponible).to.eql(1000); });"
                 ]
               }
             }
@@ -1178,6 +1319,8 @@
                   "    var c = cuenta('225487');",
                   "    pm.expect(c.saldoInicial).to.eql(100);",
                   "    pm.expect(c.saldoDisponible).to.eql(700);",
+                  "    pm.expect(c.saldoInicioPeriodo).to.eql(100);",
+                  "    pm.expect(c.saldoFinPeriodo).to.eql(700);",
                   "    pm.expect(c.totalCreditos).to.eql(600);",
                   "    pm.expect(c.movimientos[0].tipoMovimiento).to.eql('DEPOSITO');",
                   "    pm.expect(c.movimientos[0].valor).to.eql(600);",
@@ -1186,6 +1329,8 @@
                   "    var c = cuenta('496825');",
                   "    pm.expect(c.saldoInicial).to.eql(540);",
                   "    pm.expect(c.saldoDisponible).to.eql(0);",
+                  "    pm.expect(c.saldoInicioPeriodo).to.eql(540);",
+                  "    pm.expect(c.saldoFinPeriodo).to.eql(0);",
                   "    pm.expect(c.totalDebitos).to.eql(-540);",
                   "    pm.expect(c.movimientos[0].tipoMovimiento).to.eql('RETIRO');",
                   "});"
@@ -1287,6 +1432,64 @@
                   "    pm.expect(pm.response.json().estado).to.eql(false);",
                   "    pm.expect(pm.response.json().saldoDisponible).to.eql(150);",
                   "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "❌ Reactivar la cuenta de un cliente inactivo → 422",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrlCuentas}}/api/cuentas/495878",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": true\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', function () { pm.response.to.have.status(422); });",
+                  "pm.test('codigo CLIENTE_INACTIVO', function () { pm.expect(pm.response.json().codigo).to.eql('CLIENTE_INACTIVO'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "❌ Movimiento en la cuenta desactivada → 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrlCuentas}}/api/movimientos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numeroCuenta\": \"495878\",\n  \"valor\": 10\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', function () { pm.response.to.have.status(422); });",
+                  "pm.test('codigo CUENTA_INACTIVA', function () { pm.expect(pm.response.json().codigo).to.eql('CUENTA_INACTIVA'); });"
                 ]
               }
             }
