@@ -27,6 +27,12 @@ spring:
           max-attempts: 3
           initial-interval: 1s
           multiplier: 2
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8180/realms/banca
+          jwk-set-uri: http://localhost:8180/realms/banca/protocol/openid-connect/certs
 
 server:
   port: 8081
