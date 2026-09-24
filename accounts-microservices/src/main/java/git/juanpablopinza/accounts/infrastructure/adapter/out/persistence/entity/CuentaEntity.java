@@ -13,6 +13,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -43,4 +44,7 @@ public class CuentaEntity {
 
 	@Column(name = "cliente_id", nullable = false, updatable = false)
 	private UUID clienteId;
+
+	@Column(name = "fecha_apertura", nullable = false, updatable = false)
+	private LocalDateTime fechaApertura;
 }

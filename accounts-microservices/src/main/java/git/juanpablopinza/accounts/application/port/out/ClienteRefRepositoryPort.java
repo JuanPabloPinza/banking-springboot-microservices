@@ -9,5 +9,9 @@ public interface ClienteRefRepositoryPort {
 
 	Optional<ClienteRef> buscar(UUID clienteId);
 
+	Optional<ClienteRef> buscarConBloqueoCompartido(UUID clienteId);
+
+	Optional<ClienteRef> buscarParaActualizar(UUID clienteId);
+
 	void guardar(ClienteRef clienteRef);
 }

@@ -15,9 +15,9 @@ public record EstadoCuentaReporte(ClienteReporte cliente, LocalDate fechaInicio,
 	public record ClienteReporte(UUID clienteId, String nombre) {
 	}
 
-	public record CuentaReporte(String numeroCuenta, TipoCuenta tipoCuenta, boolean estado, BigDecimal saldoInicial,
-			BigDecimal saldoDisponible, BigDecimal totalCreditos, BigDecimal totalDebitos,
-			List<MovimientoReporte> movimientos) {
+	public record CuentaReporte(String numeroCuenta, TipoCuenta tipoCuenta, boolean estado, LocalDateTime fechaApertura,
+			BigDecimal saldoInicial, BigDecimal saldoDisponible, BigDecimal saldoInicioPeriodo, BigDecimal saldoFinPeriodo,
+			BigDecimal totalCreditos, BigDecimal totalDebitos, List<MovimientoReporte> movimientos) {
 	}
 
 	public record MovimientoReporte(LocalDateTime fecha, TipoMovimiento tipoMovimiento, BigDecimal valor,

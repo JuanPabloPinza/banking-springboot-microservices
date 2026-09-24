@@ -13,10 +13,14 @@ import git.juanpablopinza.accounts.domain.exception.CuentaNoEncontradaException;
 import git.juanpablopinza.accounts.domain.exception.NumeroCuentaDuplicadoException;
 import git.juanpablopinza.accounts.domain.model.ClienteRef;
 import git.juanpablopinza.accounts.domain.model.Cuenta;
+import git.juanpablopinza.accounts.domain.model.TipoCuenta;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 import static java.util.Objects.requireNonNullElse;
@@ -28,20 +32,18 @@ public class CuentaService implements CuentaUseCase {
 
 	private final CuentaRepositoryPort cuentaRepository;
 	private final ClienteRefRepositoryPort clienteRefRepository;
+	private final Clock clock;
 
 	@Override
 	public Cuenta crear(CrearCuentaCommand command) {
-		ClienteRef cliente = clienteRefRepository.buscar(command.clienteId())
-				.orElseThrow(() -> new ClienteNoEncontradoException(command.clienteId()));
-		if (!cliente.estado()) {
-			throw new ClienteInactivoException(cliente.clienteId());
-		}
+		validarActivo(bloquearCliente(command.clienteId()));
 		if (cuentaRepository.existePorNumero(command.numeroCuenta())) {
 			throw new NumeroCuentaDuplicadoException(command.numeroCuenta());
 		}
 		Cuenta cuenta = Cuenta.abrir(command.numeroCuenta(), command.tipoCuenta(), command.saldoInicial(),
-				requireNonNullElse(command.estado(), true), command.clienteId());
-		return cuentaRepository.guardar(cuenta);
+				requireNonNullElse(command.estado(), true), command.clienteId(),
+				LocalDateTime.now(clock).truncatedTo(ChronoUnit.SECONDS));
+		return cuentaRepository.crear(cuenta);
 	}
 
 	@Override
@@ -59,17 +61,12 @@ public class CuentaService implements CuentaUseCase {
 
 	@Override
 	public Cuenta actualizar(String numeroCuenta, ActualizarCuentaCommand command) {
-		Cuenta cuenta = bloquear(numeroCuenta);
-		cuenta.actualizar(command.tipoCuenta(), command.estado());
-		return cuentaRepository.guardar(cuenta);
+		return aplicarCambios(numeroCuenta, command.tipoCuenta(), command.estado());
 	}
 
 	@Override
 	public Cuenta actualizarParcial(String numeroCuenta, ActualizarParcialCuentaCommand command) {
-		Cuenta cuenta = bloquear(numeroCuenta);
-		cuenta.actualizar(requireNonNullElse(command.tipoCuenta(), cuenta.getTipoCuenta()),
-				requireNonNullElse(command.estado(), cuenta.isEstado()));
-		return cuentaRepository.guardar(cuenta);
+		return aplicarCambios(numeroCuenta, command.tipoCuenta(), command.estado());
 	}
 
 	@Override
@@ -77,6 +74,30 @@ public class CuentaService implements CuentaUseCase {
 		Cuenta cuenta = bloquear(numeroCuenta);
 		cuenta.desactivar();
 		cuentaRepository.guardar(cuenta);
+	}
+
+	private Cuenta aplicarCambios(String numeroCuenta, TipoCuenta tipoCuenta, Boolean estado) {
+		UUID clienteId = cuentaRepository.buscarClienteId(numeroCuenta)
+				.orElseThrow(() -> new CuentaNoEncontradaException(numeroCuenta));
+		ClienteRef cliente = bloquearCliente(clienteId);
+		Cuenta cuenta = bloquear(numeroCuenta);
+		boolean nuevoEstado = requireNonNullElse(estado, cuenta.isEstado());
+		if (nuevoEstado) {
+			validarActivo(cliente);
+		}
+		cuenta.actualizar(requireNonNullElse(tipoCuenta, cuenta.getTipoCuenta()), nuevoEstado);
+		return cuentaRepository.guardar(cuenta);
+	}
+
+	private ClienteRef bloquearCliente(UUID clienteId) {
+		return clienteRefRepository.buscarConBloqueoCompartido(clienteId)
+				.orElseThrow(() -> new ClienteNoEncontradoException(clienteId));
+	}
+
+	private static void validarActivo(ClienteRef cliente) {
+		if (!cliente.estado()) {
+			throw new ClienteInactivoException(cliente.clienteId());
+		}
 	}
 
 	private Cuenta bloquear(String numeroCuenta) {

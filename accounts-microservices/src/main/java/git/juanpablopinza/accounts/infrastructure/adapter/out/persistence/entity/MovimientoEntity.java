@@ -44,7 +44,4 @@ public class MovimientoEntity {
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "cuenta_id", nullable = false, updatable = false)
 	private CuentaEntity cuenta;
-
-	@Column(name = "idempotency_key", unique = true, length = 64, updatable = false)
-	private String idempotencyKey;
 }

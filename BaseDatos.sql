@@ -67,6 +67,7 @@ CREATE TABLE cuentas.cuenta (
     saldo_disponible  NUMERIC(15, 2) NOT NULL
                       CONSTRAINT ck_cuenta_saldo_disponible CHECK (saldo_disponible >= 0),
     estado            BOOLEAN        NOT NULL DEFAULT TRUE,
+    fecha_apertura    TIMESTAMP(6)   NOT NULL,
     cliente_id        UUID           NOT NULL
                       CONSTRAINT fk_cuenta_cliente REFERENCES cuentas.cliente_ref (cliente_id)
 );
@@ -83,8 +84,6 @@ CREATE TABLE cuentas.movimiento (
                      CONSTRAINT ck_movimiento_saldo CHECK (saldo >= 0),
     cuenta_id        BIGINT         NOT NULL
                      CONSTRAINT fk_movimiento_cuenta REFERENCES cuentas.cuenta (id),
-    idempotency_key  VARCHAR(64)
-                     CONSTRAINT uk_movimiento_idempotency_key UNIQUE,
     CONSTRAINT ck_movimiento_tipo_signo CHECK (
         (tipo_movimiento = 'DEPOSITO' AND valor > 0) OR
         (tipo_movimiento = 'RETIRO'   AND valor < 0)
@@ -92,5 +91,15 @@ CREATE TABLE cuentas.movimiento (
 );
 
 CREATE INDEX idx_movimiento_cuenta_fecha ON cuentas.movimiento (cuenta_id, fecha);
+
+CREATE TABLE cuentas.solicitud_idempotente (
+    idempotency_key  VARCHAR(64)
+                     CONSTRAINT pk_solicitud_idempotente PRIMARY KEY,
+    numero_cuenta    VARCHAR(20)    NOT NULL,
+    valor            NUMERIC(15, 2) NOT NULL,
+    movimiento_id    BIGINT
+                     CONSTRAINT fk_solicitud_movimiento REFERENCES cuentas.movimiento (id) ON DELETE SET NULL,
+    creado_en        TIMESTAMP(6)   NOT NULL
+);
 
 RESET ROLE;

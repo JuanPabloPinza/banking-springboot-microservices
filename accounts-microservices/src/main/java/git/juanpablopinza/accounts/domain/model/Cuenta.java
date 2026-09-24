@@ -19,31 +19,33 @@ public class Cuenta {
 	private BigDecimal saldoDisponible;
 	private boolean estado;
 	private final UUID clienteId;
+	private final LocalDateTime fechaApertura;
 
 	public Cuenta(String numeroCuenta, TipoCuenta tipoCuenta, BigDecimal saldoInicial, BigDecimal saldoDisponible,
-			boolean estado, UUID clienteId) {
+			boolean estado, UUID clienteId, LocalDateTime fechaApertura) {
 		this.numeroCuenta = numeroCuenta;
 		this.tipoCuenta = tipoCuenta;
 		this.saldoInicial = saldoInicial;
 		this.saldoDisponible = saldoDisponible;
 		this.estado = estado;
 		this.clienteId = clienteId;
+		this.fechaApertura = fechaApertura;
 	}
 
 	public static Cuenta abrir(String numeroCuenta, TipoCuenta tipoCuenta, BigDecimal saldoInicial, boolean estado,
-			UUID clienteId) {
+			UUID clienteId, LocalDateTime fechaApertura) {
 		if (saldoInicial.signum() < 0) {
 			throw new DatoInvalidoException("El saldo inicial no puede ser negativo");
 		}
 		BigDecimal saldo = dinero(saldoInicial);
-		return new Cuenta(numeroCuenta, tipoCuenta, saldo, saldo, estado, clienteId);
+		return new Cuenta(numeroCuenta, tipoCuenta, saldo, saldo, estado, clienteId, fechaApertura);
 	}
 
-	public Movimiento registrarMovimiento(BigDecimal valor, LocalDateTime fecha, String idempotencyKey) {
+	public Movimiento registrarMovimiento(BigDecimal valor, LocalDateTime fecha) {
 		validarActiva();
 		BigDecimal monto = montoMovimiento(valor);
 		saldoDisponible = saldoTras(saldoDisponible, monto);
-		return Movimiento.nuevo(numeroCuenta, fecha, monto, saldoDisponible, idempotencyKey);
+		return Movimiento.nuevo(numeroCuenta, fecha, monto, saldoDisponible);
 	}
 
 	public void corregirUltimoMovimiento(Movimiento ultimo, BigDecimal nuevoValor) {
