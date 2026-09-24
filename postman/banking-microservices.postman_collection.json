@@ -1,0 +1,1231 @@
+{
+  "info": {
+    "name": "Banca Microservicios - Reto Técnico TCS",
+    "description": "Casos de uso del enunciado en orden. Ejecutar la colección completa con el Runner sobre una base recién creada (docker compose down -v && docker compose up --build -d).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrlClientes",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "baseUrlCuentas",
+      "value": "http://localhost:8081"
+    },
+    {
+      "key": "joseId",
+      "value": ""
+    },
+    {
+      "key": "marianelaId",
+      "value": ""
+    },
+    {
+      "key": "juanId",
+      "value": ""
+    },
+    {
+      "key": "idempotencyKey",
+      "value": ""
+    },
+    {
+      "key": "movimientoIdempotenteId",
+      "value": ""
+    },
+    {
+      "key": "ultimoMovimientoId",
+      "value": ""
+    },
+    {
+      "key": "fechaDesde",
+      "value": ""
+    },
+    {
+      "key": "fechaHasta",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "01 Clientes (caso 1)",
+      "item": [
+        {
+          "name": "Crear Jose Lema",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrlClientes}}/api/clientes",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Jose Lema\",\n  \"genero\": \"MASCULINO\",\n  \"edad\": 35,\n  \"identificacion\": \"1710034065\",\n  \"direccion\": \"Otavalo sn y principal\",\n  \"telefono\": \"098254785\",\n  \"contrasena\": \"1234\",\n  \"estado\": true\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', function () { pm.response.to.have.status(201); });",
+                  "",
+                  "var json = pm.response.json();",
+                  "pm.test('Devuelve clienteId y no expone la contraseña', function () {",
+                  "    pm.expect(json.clienteId).to.be.a('string');",
+                  "    pm.expect(json).to.not.have.property('contrasena');",
+                  "    pm.expect(json.nombre).to.eql('Jose Lema');",
+                  "});",
+                  "pm.collectionVariables.set('joseId', json.clienteId);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear Marianela Montalvo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrlClientes}}/api/clientes",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Marianela Montalvo\",\n  \"genero\": \"FEMENINO\",\n  \"edad\": 30,\n  \"identificacion\": \"1712345675\",\n  \"direccion\": \"Amazonas y NNUU\",\n  \"telefono\": \"097548965\",\n  \"contrasena\": \"5678\",\n  \"estado\": true\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', function () { pm.response.to.have.status(201); });",
+                  "",
+                  "var json = pm.response.json();",
+                  "pm.test('Devuelve clienteId y no expone la contraseña', function () {",
+                  "    pm.expect(json.clienteId).to.be.a('string');",
+                  "    pm.expect(json).to.not.have.property('contrasena');",
+                  "    pm.expect(json.nombre).to.eql('Marianela Montalvo');",
+                  "});",
+                  "pm.collectionVariables.set('marianelaId', json.clienteId);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear Juan Osorio",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrlClientes}}/api/clientes",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Juan Osorio\",\n  \"genero\": \"MASCULINO\",\n  \"edad\": 40,\n  \"identificacion\": \"0102030400\",\n  \"direccion\": \"13 junio y Equinoccial\",\n  \"telefono\": \"098874587\",\n  \"contrasena\": \"1245\",\n  \"estado\": true\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', function () { pm.response.to.have.status(201); });",
+                  "",
+                  "var json = pm.response.json();",
+                  "pm.test('Devuelve clienteId y no expone la contraseña', function () {",
+                  "    pm.expect(json.clienteId).to.be.a('string');",
+                  "    pm.expect(json).to.not.have.property('contrasena');",
+                  "    pm.expect(json.nombre).to.eql('Juan Osorio');",
+                  "});",
+                  "pm.collectionVariables.set('juanId', json.clienteId);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar clientes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrlClientes}}/api/clientes?page=0&size=20"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "",
+                  "pm.test('Lista paginada con los 3 clientes', function () {",
+                  "    pm.expect(pm.response.json().totalElementos).to.be.at.least(3);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Obtener Jose Lema",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrlClientes}}/api/clientes/{{joseId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "",
+                  "pm.test('Es Jose Lema', function () { pm.expect(pm.response.json().identificacion).to.eql('1710034065'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT Jose Lema (actualización completa)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrlClientes}}/api/clientes/{{joseId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Jose Lema\",\n  \"genero\": \"MASCULINO\",\n  \"edad\": 36,\n  \"direccion\": \"Otavalo sn y principal\",\n  \"telefono\": \"098254785\",\n  \"estado\": true\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "",
+                  "pm.test('Edad actualizada a 36', function () { pm.expect(pm.response.json().edad).to.eql(36); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH Jose Lema (actualización parcial)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrlClientes}}/api/clientes/{{joseId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"direccion\": \"Otavalo y Sucre\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "",
+                  "var json = pm.response.json();",
+                  "pm.test('Solo cambia la dirección', function () {",
+                  "    pm.expect(json.direccion).to.eql('Otavalo y Sucre');",
+                  "    pm.expect(json.edad).to.eql(36);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "❌ Cédula inválida → 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrlClientes}}/api/clientes",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Cedula Invalida\",\n  \"genero\": \"OTRO\",\n  \"edad\": 25,\n  \"identificacion\": \"1710034066\",\n  \"direccion\": \"Quito\",\n  \"telefono\": \"0991234567\",\n  \"contrasena\": \"1234\",\n  \"estado\": true\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', function () { pm.response.to.have.status(400); });",
+                  "",
+                  "pm.test('Error en el campo identificacion', function () {",
+                  "    var errores = pm.response.json().errores.map(function (e) { return e.campo; });",
+                  "    pm.expect(errores).to.include('identificacion');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "❌ Identificación duplicada → 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrlClientes}}/api/clientes",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Jose Duplicado\",\n  \"genero\": \"MASCULINO\",\n  \"edad\": 35,\n  \"identificacion\": \"1710034065\",\n  \"direccion\": \"Quito\",\n  \"telefono\": \"0991234567\",\n  \"contrasena\": \"1234\",\n  \"estado\": true\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 409', function () { pm.response.to.have.status(409); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 Cuentas (casos 2 y 3)",
+      "item": [
+        {
+          "name": "Crear cuenta 478758 AHORROS 2000",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrlCuentas}}/api/cuentas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numeroCuenta\": \"478758\",\n  \"tipoCuenta\": \"AHORROS\",\n  \"saldoInicial\": 2000,\n  \"estado\": true,\n  \"clienteId\": \"{{joseId}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "setTimeout(function () {}, 1500);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', function () { pm.response.to.have.status(201); });",
+                  "",
+                  "var json = pm.response.json();",
+                  "pm.test('Cuenta 478758 con saldo inicial 2000', function () {",
+                  "    pm.expect(json.numeroCuenta).to.eql('478758');",
+                  "    pm.expect(json.tipoCuenta).to.eql('AHORROS');",
+                  "    pm.expect(json.saldoInicial).to.eql(2000);",
+                  "    pm.expect(json.saldoDisponible).to.eql(2000);",
+                  "    pm.expect(json.estado).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear cuenta 225487 CORRIENTE 100",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrlCuentas}}/api/cuentas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numeroCuenta\": \"225487\",\n  \"tipoCuenta\": \"CORRIENTE\",\n  \"saldoInicial\": 100,\n  \"estado\": true,\n  \"clienteId\": \"{{marianelaId}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', function () { pm.response.to.have.status(201); });",
+                  "",
+                  "var json = pm.response.json();",
+                  "pm.test('Cuenta 225487 con saldo inicial 100', function () {",
+                  "    pm.expect(json.numeroCuenta).to.eql('225487');",
+                  "    pm.expect(json.tipoCuenta).to.eql('CORRIENTE');",
+                  "    pm.expect(json.saldoInicial).to.eql(100);",
+                  "    pm.expect(json.saldoDisponible).to.eql(100);",
+                  "    pm.expect(json.estado).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear cuenta 495878 AHORROS 0",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrlCuentas}}/api/cuentas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numeroCuenta\": \"495878\",\n  \"tipoCuenta\": \"AHORROS\",\n  \"saldoInicial\": 0,\n  \"estado\": true,\n  \"clienteId\": \"{{juanId}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', function () { pm.response.to.have.status(201); });",
+                  "",
+                  "var json = pm.response.json();",
+                  "pm.test('Cuenta 495878 con saldo inicial 0', function () {",
+                  "    pm.expect(json.numeroCuenta).to.eql('495878');",
+                  "    pm.expect(json.tipoCuenta).to.eql('AHORROS');",
+                  "    pm.expect(json.saldoInicial).to.eql(0);",
+                  "    pm.expect(json.saldoDisponible).to.eql(0);",
+                  "    pm.expect(json.estado).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear cuenta 496825 AHORROS 540",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrlCuentas}}/api/cuentas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numeroCuenta\": \"496825\",\n  \"tipoCuenta\": \"AHORROS\",\n  \"saldoInicial\": 540,\n  \"estado\": true,\n  \"clienteId\": \"{{marianelaId}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', function () { pm.response.to.have.status(201); });",
+                  "",
+                  "var json = pm.response.json();",
+                  "pm.test('Cuenta 496825 con saldo inicial 540', function () {",
+                  "    pm.expect(json.numeroCuenta).to.eql('496825');",
+                  "    pm.expect(json.tipoCuenta).to.eql('AHORROS');",
+                  "    pm.expect(json.saldoInicial).to.eql(540);",
+                  "    pm.expect(json.saldoDisponible).to.eql(540);",
+                  "    pm.expect(json.estado).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear cuenta 585545 CORRIENTE 1000",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrlCuentas}}/api/cuentas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numeroCuenta\": \"585545\",\n  \"tipoCuenta\": \"CORRIENTE\",\n  \"saldoInicial\": 1000,\n  \"estado\": true,\n  \"clienteId\": \"{{joseId}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', function () { pm.response.to.have.status(201); });",
+                  "",
+                  "var json = pm.response.json();",
+                  "pm.test('Cuenta 585545 con saldo inicial 1000', function () {",
+                  "    pm.expect(json.numeroCuenta).to.eql('585545');",
+                  "    pm.expect(json.tipoCuenta).to.eql('CORRIENTE');",
+                  "    pm.expect(json.saldoInicial).to.eql(1000);",
+                  "    pm.expect(json.saldoDisponible).to.eql(1000);",
+                  "    pm.expect(json.estado).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar cuentas de Jose Lema",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrlCuentas}}/api/cuentas?clienteId={{joseId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "",
+                  "pm.test('Jose tiene 2 cuentas', function () { pm.expect(pm.response.json().totalElementos).to.eql(2); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "❌ Número de cuenta duplicado → 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrlCuentas}}/api/cuentas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numeroCuenta\": \"478758\",\n  \"tipoCuenta\": \"AHORROS\",\n  \"saldoInicial\": 10,\n  \"clienteId\": \"{{joseId}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 409', function () { pm.response.to.have.status(409); });",
+                  "pm.test('codigo NUMERO_CUENTA_DUPLICADO', function () { pm.expect(pm.response.json().codigo).to.eql('NUMERO_CUENTA_DUPLICADO'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "❌ Cliente inexistente → 404",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrlCuentas}}/api/cuentas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numeroCuenta\": \"999999\",\n  \"tipoCuenta\": \"AHORROS\",\n  \"saldoInicial\": 10,\n  \"clienteId\": \"00000000-0000-0000-0000-000000000000\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404', function () { pm.response.to.have.status(404); });",
+                  "pm.test('codigo CLIENTE_NO_ENCONTRADO', function () { pm.expect(pm.response.json().codigo).to.eql('CLIENTE_NO_ENCONTRADO'); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 Movimientos (caso 4)",
+      "item": [
+        {
+          "name": "478758 −575 → 1425",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrlCuentas}}/api/movimientos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numeroCuenta\": \"478758\",\n  \"valor\": -575\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', function () { pm.response.to.have.status(201); });",
+                  "",
+                  "var json = pm.response.json();",
+                  "pm.test('RETIRO de 575 deja saldo 1425', function () {",
+                  "    pm.expect(json.tipoMovimiento).to.eql('RETIRO');",
+                  "    pm.expect(json.valor).to.eql(-575);",
+                  "    pm.expect(json.saldo).to.eql(1425);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "225487 +600 → 700",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrlCuentas}}/api/movimientos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numeroCuenta\": \"225487\",\n  \"valor\": 600\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', function () { pm.response.to.have.status(201); });",
+                  "",
+                  "var json = pm.response.json();",
+                  "pm.test('DEPOSITO de 600 deja saldo 700', function () {",
+                  "    pm.expect(json.tipoMovimiento).to.eql('DEPOSITO');",
+                  "    pm.expect(json.valor).to.eql(600);",
+                  "    pm.expect(json.saldo).to.eql(700);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "495878 +150 → 150",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrlCuentas}}/api/movimientos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numeroCuenta\": \"495878\",\n  \"valor\": 150\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', function () { pm.response.to.have.status(201); });",
+                  "",
+                  "var json = pm.response.json();",
+                  "pm.test('DEPOSITO de 150 deja saldo 150', function () {",
+                  "    pm.expect(json.tipoMovimiento).to.eql('DEPOSITO');",
+                  "    pm.expect(json.valor).to.eql(150);",
+                  "    pm.expect(json.saldo).to.eql(150);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "496825 −540 → 0",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrlCuentas}}/api/movimientos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numeroCuenta\": \"496825\",\n  \"valor\": -540\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', function () { pm.response.to.have.status(201); });",
+                  "",
+                  "var json = pm.response.json();",
+                  "pm.test('RETIRO de 540 deja saldo 0', function () {",
+                  "    pm.expect(json.tipoMovimiento).to.eql('RETIRO');",
+                  "    pm.expect(json.valor).to.eql(-540);",
+                  "    pm.expect(json.saldo).to.eql(0);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "❌ 496825 −1 sin saldo → 422 Saldo no disponible",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrlCuentas}}/api/movimientos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numeroCuenta\": \"496825\",\n  \"valor\": -1\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', function () { pm.response.to.have.status(422); });",
+                  "pm.test('codigo SALDO_NO_DISPONIBLE', function () { pm.expect(pm.response.json().codigo).to.eql('SALDO_NO_DISPONIBLE'); });",
+                  "pm.test('detail', function () { pm.expect(pm.response.json().detail).to.eql('Saldo no disponible'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "585545 +100 con Idempotency-Key → 201",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idempotencyKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrlCuentas}}/api/movimientos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numeroCuenta\": \"585545\",\n  \"valor\": 100\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('idempotencyKey', pm.variables.replaceIn('{{$guid}}'));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', function () { pm.response.to.have.status(201); });",
+                  "",
+                  "pm.collectionVariables.set('movimientoIdempotenteId', pm.response.json().id);",
+                  "pm.test('Saldo 1100', function () { pm.expect(pm.response.json().saldo).to.eql(1100); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reintento con la misma Idempotency-Key → 200 sin duplicar",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idempotencyKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrlCuentas}}/api/movimientos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numeroCuenta\": \"585545\",\n  \"valor\": 100\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "",
+                  "pm.test('Devuelve el mismo movimiento', function () {",
+                  "    pm.expect(pm.response.json().id).to.eql(pm.collectionVariables.get('movimientoIdempotenteId'));",
+                  "    pm.expect(pm.response.json().saldo).to.eql(1100);",
+                  "});",
+                  "pm.test('Marca la respuesta como repetida', function () {",
+                  "    pm.expect(pm.response.headers.get('Idempotent-Replayed')).to.eql('true');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "585545 +300 → 1400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrlCuentas}}/api/movimientos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numeroCuenta\": \"585545\",\n  \"valor\": 300\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', function () { pm.response.to.have.status(201); });",
+                  "",
+                  "var json = pm.response.json();",
+                  "pm.test('DEPOSITO de 300 deja saldo 1400', function () {",
+                  "    pm.expect(json.tipoMovimiento).to.eql('DEPOSITO');",
+                  "    pm.expect(json.valor).to.eql(300);",
+                  "    pm.expect(json.saldo).to.eql(1400);",
+                  "});",
+                  "pm.collectionVariables.set('ultimoMovimientoId', json.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "❌ PUT de un movimiento que no es el último → 409",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrlCuentas}}/api/movimientos/{{movimientoIdempotenteId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"valor\": 50\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 409', function () { pm.response.to.have.status(409); });",
+                  "pm.test('codigo MOVIMIENTO_NO_MODIFICABLE', function () { pm.expect(pm.response.json().codigo).to.eql('MOVIMIENTO_NO_MODIFICABLE'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT del último movimiento (300 → 200)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrlCuentas}}/api/movimientos/{{ultimoMovimientoId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"valor\": 200\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "",
+                  "pm.test('Saldo recalculado a 1300', function () { pm.expect(pm.response.json().saldo).to.eql(1300); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE del último movimiento",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrlCuentas}}/api/movimientos/{{ultimoMovimientoId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204', function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cuenta 585545 vuelve a 1100",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrlCuentas}}/api/cuentas/585545"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "",
+                  "pm.test('Saldo disponible 1100', function () { pm.expect(pm.response.json().saldoDisponible).to.eql(1100); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04 Reportes (caso 5)",
+      "item": [
+        {
+          "name": "Estado de cuenta de Marianela Montalvo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrlCuentas}}/api/reportes?cliente={{marianelaId}}&fecha={{fechaDesde}},{{fechaHasta}}"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "function iso(d) {",
+                  "    return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);",
+                  "}",
+                  "var hoy = new Date();",
+                  "pm.collectionVariables.set('fechaDesde', iso(new Date(hoy.getTime() - 86400000)));",
+                  "pm.collectionVariables.set('fechaHasta', iso(new Date(hoy.getTime() + 86400000)));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "",
+                  "var json = pm.response.json();",
+                  "function cuenta(numero) { return json.cuentas.filter(function (c) { return c.numeroCuenta === numero; })[0]; }",
+                  "pm.test('Reporte de Marianela Montalvo con sus 2 cuentas', function () {",
+                  "    pm.expect(json.cliente.nombre).to.eql('Marianela Montalvo');",
+                  "    pm.expect(json.cuentas.length).to.eql(2);",
+                  "});",
+                  "pm.test('225487 CORRIENTE: 100 → 700 con un depósito de 600', function () {",
+                  "    var c = cuenta('225487');",
+                  "    pm.expect(c.saldoInicial).to.eql(100);",
+                  "    pm.expect(c.saldoDisponible).to.eql(700);",
+                  "    pm.expect(c.totalCreditos).to.eql(600);",
+                  "    pm.expect(c.movimientos[0].tipoMovimiento).to.eql('DEPOSITO');",
+                  "    pm.expect(c.movimientos[0].valor).to.eql(600);",
+                  "});",
+                  "pm.test('496825 AHORROS: 540 → 0 con un retiro de 540', function () {",
+                  "    var c = cuenta('496825');",
+                  "    pm.expect(c.saldoInicial).to.eql(540);",
+                  "    pm.expect(c.saldoDisponible).to.eql(0);",
+                  "    pm.expect(c.totalDebitos).to.eql(-540);",
+                  "    pm.expect(c.movimientos[0].tipoMovimiento).to.eql('RETIRO');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "❌ Rango de fechas invertido → 400",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrlCuentas}}/api/reportes?cliente={{marianelaId}}&fecha={{fechaHasta}},{{fechaDesde}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('codigo DATO_INVALIDO', function () { pm.expect(pm.response.json().codigo).to.eql('DATO_INVALIDO'); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "05 Borrado lógico",
+      "item": [
+        {
+          "name": "DELETE Juan Osorio",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrlClientes}}/api/clientes/{{juanId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204', function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Juan Osorio queda inactivo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrlClientes}}/api/clientes/{{juanId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "",
+                  "pm.test('estado false', function () { pm.expect(pm.response.json().estado).to.eql(false); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Su cuenta 495878 se desactiva por el evento",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrlCuentas}}/api/cuentas/495878"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "setTimeout(function () {}, 1500);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "",
+                  "pm.test('estado false y el saldo se conserva', function () {",
+                  "    pm.expect(pm.response.json().estado).to.eql(false);",
+                  "    pm.expect(pm.response.json().saldoDisponible).to.eql(150);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "06 Observabilidad",
+      "item": [
+        {
+          "name": "Health de clients-microservices",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrlClientes}}/actuator/health"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "",
+                  "pm.test('UP', function () { pm.expect(pm.response.json().status).to.eql('UP'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Health de accounts-microservices",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrlCuentas}}/actuator/health"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "",
+                  "pm.test('UP', function () { pm.expect(pm.response.json().status).to.eql('UP'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Métricas Prometheus de accounts-microservices",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrlCuentas}}/actuator/prometheus"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "",
+                  "pm.test('Expone métricas HTTP', function () { pm.expect(pm.response.text()).to.include('http_server_requests'); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
