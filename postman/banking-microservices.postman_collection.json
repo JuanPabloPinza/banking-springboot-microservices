@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Banca Microservicios - Reto Técnico TCS",
-    "description": "Casos de uso del enunciado en orden. Ejecutar la colección completa con el Runner sobre una base recién creada (docker compose down -v && docker compose up --build -d).",
+    "description": "Casos de uso del enunciado en orden. El token de Keycloak se obtiene solo antes de cada petición si no hay uno vigente. Ejecutar la colección completa con el Runner sobre una base recién creada (docker compose down -v && docker compose up --build -d).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -12,6 +12,26 @@
     {
       "key": "baseUrlCuentas",
       "value": "http://localhost:8081"
+    },
+    {
+      "key": "keycloakUrl",
+      "value": "http://localhost:8180"
+    },
+    {
+      "key": "clientId",
+      "value": "banca-postman"
+    },
+    {
+      "key": "clientSecret",
+      "value": "banca-postman-secret"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "tokenExpira",
+      "value": ""
     },
     {
       "key": "joseId",
@@ -46,7 +66,122 @@
       "value": ""
     }
   ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "var expira = Number(pm.collectionVariables.get('tokenExpira') || 0);",
+          "if (!pm.collectionVariables.get('token') || Date.now() >= expira) {",
+          "    pm.sendRequest({",
+          "        url: pm.collectionVariables.get('keycloakUrl') + '/realms/banca/protocol/openid-connect/token',",
+          "        method: 'POST',",
+          "        header: { 'Content-Type': 'application/x-www-form-urlencoded' },",
+          "        body: {",
+          "            mode: 'urlencoded',",
+          "            urlencoded: [",
+          "                { key: 'grant_type', value: 'client_credentials' },",
+          "                { key: 'client_id', value: pm.collectionVariables.get('clientId') },",
+          "                { key: 'client_secret', value: pm.collectionVariables.get('clientSecret') }",
+          "            ]",
+          "        }",
+          "    }, function (err, res) {",
+          "        if (!err && res.code === 200) {",
+          "            pm.collectionVariables.set('token', res.json().access_token);",
+          "            pm.collectionVariables.set('tokenExpira', Date.now() + (res.json().expires_in - 30) * 1000);",
+          "        }",
+          "    });",
+          "}"
+        ]
+      }
+    }
+  ],
   "item": [
+    {
+      "name": "00 Autenticación (Keycloak)",
+      "item": [
+        {
+          "name": "Obtener token (client_credentials)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{keycloakUrl}}/realms/banca/protocol/openid-connect/token",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "client_credentials"
+                },
+                {
+                  "key": "client_id",
+                  "value": "{{clientId}}"
+                },
+                {
+                  "key": "client_secret",
+                  "value": "{{clientSecret}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "",
+                  "var json = pm.response.json();",
+                  "pm.test('Devuelve un access_token Bearer', function () {",
+                  "    pm.expect(json.access_token).to.be.a('string');",
+                  "    pm.expect(json.token_type).to.eql('Bearer');",
+                  "});",
+                  "pm.collectionVariables.set('token', json.access_token);",
+                  "pm.collectionVariables.set('tokenExpira', Date.now() + (json.expires_in - 30) * 1000);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "❌ Sin token → 401",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrlClientes}}/api/clientes",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401', function () { pm.response.to.have.status(401); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
     {
       "name": "01 Clientes (caso 1)",
       "item": [
