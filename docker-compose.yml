@@ -32,5 +32,45 @@ services:
       timeout: 5s
       retries: 10
 
+  clients-microservices:
+    build: ./clients-microservices
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/banca
+      SPRING_RABBITMQ_HOST: rabbitmq
+      TZ: America/Guayaquil
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/actuator/health/readiness"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  accounts-microservices:
+    build: ./accounts-microservices
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/banca
+      SPRING_RABBITMQ_HOST: rabbitmq
+      TZ: America/Guayaquil
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8081/actuator/health/readiness"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
 volumes:
   pgdata:
