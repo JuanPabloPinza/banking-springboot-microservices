@@ -38,7 +38,7 @@ class SincronizacionClienteServiceTest {
 	@Test
 	@DisplayName("Un cliente nuevo se guarda en la réplica sin tocar cuentas")
 	void clienteNuevo() {
-		when(clienteRefRepository.buscar(CLIENTE)).thenReturn(Optional.empty());
+		when(clienteRefRepository.buscarParaActualizar(CLIENTE)).thenReturn(Optional.empty());
 
 		service.sincronizar(new SincronizarClienteCommand(CLIENTE, "Jose Lema", true, T1));
 
@@ -49,7 +49,7 @@ class SincronizacionClienteServiceTest {
 	@Test
 	@DisplayName("Un evento con estado false actualiza la réplica y desactiva las cuentas del cliente")
 	void clienteEliminado() {
-		when(clienteRefRepository.buscar(CLIENTE))
+		when(clienteRefRepository.buscarParaActualizar(CLIENTE))
 				.thenReturn(Optional.of(new ClienteRef(CLIENTE, "Juan Osorio", true, T1)));
 
 		service.sincronizar(new SincronizarClienteCommand(CLIENTE, "Juan Osorio", false, T2));
@@ -61,7 +61,7 @@ class SincronizacionClienteServiceTest {
 	@Test
 	@DisplayName("Un evento anterior al último aplicado se ignora")
 	void eventoAtrasado() {
-		when(clienteRefRepository.buscar(CLIENTE))
+		when(clienteRefRepository.buscarParaActualizar(CLIENTE))
 				.thenReturn(Optional.of(new ClienteRef(CLIENTE, "Nombre nuevo", true, T2)));
 
 		service.sincronizar(new SincronizarClienteCommand(CLIENTE, "Nombre viejo", false, T1));

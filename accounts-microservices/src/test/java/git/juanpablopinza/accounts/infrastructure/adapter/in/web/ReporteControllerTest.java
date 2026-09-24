@@ -50,8 +50,10 @@ class ReporteControllerTest {
 		LocalDate hasta = LocalDate.of(2026, 9, 30);
 		when(reporteUseCase.generar(CLIENTE, desde, hasta)).thenReturn(new EstadoCuentaReporte(
 				new ClienteReporte(CLIENTE, "Marianela Montalvo"), desde, hasta,
-				List.of(new CuentaReporte("225487", TipoCuenta.CORRIENTE, true, new BigDecimal("100.00"),
-						new BigDecimal("700.00"), new BigDecimal("600.00"), new BigDecimal("0.00"),
+				List.of(new CuentaReporte("225487", TipoCuenta.CORRIENTE, true, LocalDateTime.of(2026, 9, 1, 9, 0),
+						new BigDecimal("100.00"),
+						new BigDecimal("700.00"), new BigDecimal("100.00"), new BigDecimal("700.00"),
+						new BigDecimal("600.00"), new BigDecimal("0.00"),
 						List.of(new MovimientoReporte(LocalDateTime.of(2026, 9, 23, 10, 15, 30),
 								TipoMovimiento.DEPOSITO, new BigDecimal("600.00"), new BigDecimal("700.00")))))));
 
@@ -60,6 +62,8 @@ class ReporteControllerTest {
 				.andExpect(jsonPath("$.cliente.nombre").value("Marianela Montalvo"))
 				.andExpect(jsonPath("$.fechaInicio").value("2026-09-01"))
 				.andExpect(jsonPath("$.cuentas[0].saldoDisponible").value(700.0))
+				.andExpect(jsonPath("$.cuentas[0].saldoInicioPeriodo").value(100.0))
+				.andExpect(jsonPath("$.cuentas[0].saldoFinPeriodo").value(700.0))
 				.andExpect(jsonPath("$.cuentas[0].movimientos[0].fecha").value("2026-09-23T10:15:30"))
 				.andExpect(jsonPath("$.cuentas[0].movimientos[0].tipoMovimiento").value("DEPOSITO"));
 	}

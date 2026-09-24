@@ -1,4 +1,4 @@
-package git.juanpablopinza.clients;
+package git.juanpablopinza.accounts;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Import;
 
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest
-class ClientsMicroservicesApplicationTests {
+class AccountsMicroservicesApplicationIT {
 
 	@Test
 	void contextLoads() {
